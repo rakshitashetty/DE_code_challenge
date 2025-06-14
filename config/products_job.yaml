@@ -1,0 +1,3 @@
+file_type: products
+file_path: ../data/raw/products.csv
+output_path: ../output/clean_products

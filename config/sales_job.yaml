@@ -1,0 +1,4 @@
+file_type: sales
+file_path: ../data/raw/sales.csv
+output_path: ../output/clean_sales
+date_column: transaction_date

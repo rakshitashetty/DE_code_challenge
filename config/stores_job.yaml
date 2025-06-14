@@ -1,0 +1,3 @@
+file_type: stores
+file_path: ../data/raw/stores.csv
+output_path: ../output/clean_stores
