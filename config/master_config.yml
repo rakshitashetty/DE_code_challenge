@@ -53,5 +53,5 @@ clean_paths:
   stores: ./output/clean/stores
 output_paths:
   enriched: ./output/enriched
-  revenue: ./output/metrics/total_revenue_by_store
-  sales: ./output/metrics/monthly_sales_insights
+  kpi: ./output/metrics/
+
