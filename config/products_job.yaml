@@ -1,3 +1,13 @@
 file_type: products
-file_path: ../data/raw/products.csv
-output_path: ../output/clean_products
+file_path: ./data/raw/products.csv
+output_path: ./output/clean_products
+schema:
+    product_id: string
+    product_name: string
+    category: string
+null_check:
+    columns: "all"  # or use "all" to apply to all columns
+    null_path: ./output/nulls/sales_null
+dup_check:
+    columns: "product_id"  # or use "all"
+    dup_path: ./output/dups/sales_dup

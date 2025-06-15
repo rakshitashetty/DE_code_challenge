@@ -1,4 +1,16 @@
 file_type: sales
-file_path: ../data/raw/sales.csv
-output_path: ../output/clean_sales
-date_column: transaction_date
+file_path: ./data/raw/sales.csv
+clean_path: ./output/clean_sales
+schema:
+    transaction_id: string
+    store_id: string
+    product_id: string
+    quantity: int
+    transaction_date: date
+    price: double
+null_check:
+    columns: "all"  # or use "all" to apply to all columns
+    null_path: ./output/nulls/sales_null
+dup_check:
+    columns: "transaction_id"  # or use "all"
+    dup_path: ./output/dups/sales_dup
