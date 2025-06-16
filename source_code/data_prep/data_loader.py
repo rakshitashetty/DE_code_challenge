@@ -1,9 +1,10 @@
 from pyspark.sql import SparkSession
+
 from source_code.utils.dq_validation import (
-    get_columns_for_check,
-    remove_nulls,
-    remove_duplicates,
     enforce_schema,
+    get_columns_for_check,
+    remove_duplicates,
+    remove_nulls,
     validate_schema,
 )
 from source_code.utils.logger import get_logger

@@ -1,5 +1,6 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, to_date, when, expr
+from pyspark.sql.functions import col, expr, to_date, when
+
 from source_code.utils.logger import get_logger
 
 # Get the logger
@@ -25,7 +26,7 @@ def parse_multiple_date_formats(
         output_col (str): Name of the new column to store parsed dates.
 
     Returns:
-        DataFrame: DataFrame with an additional column containing normalized date values.
+        df: DataFrame with an additional column containing normalized date values.
     """
 
     logger.info(

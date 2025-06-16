@@ -1,6 +1,5 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, sum, month, year, round
-
+from pyspark.sql.functions import col, month, round, sum, year
 
 # Set up logging
 from source_code.utils.logger import get_logger
@@ -10,11 +9,12 @@ logger = get_logger(__name__)
 
 class Analysis:
     """
-    A utility class containing static methods to compute business KPIs from enriched datasets.
+    A utility class containing static methods
+    to compute business KPIs from enriched datasets.
 
     Methods:
-        compute_sales_insight(df): Calculates total monthly revenue by year and month for each store.
-        compute_revenue_insight(df): Aggregates total revenue by store. and product category
+        compute_sales_insight(df)
+        compute_revenue_insight(df)
     """
 
     @staticmethod
@@ -36,7 +36,8 @@ class Analysis:
                 .agg(round(sum("revenue"), 2).alias("total_revenue"))
             )
             logger.info(
-                "Revenue insight computation completed. Resulting DataFrame has %d rows and %d columns.",
+                "Revenue insight computation completed. "
+                "Resulting DataFrame has %d rows and %d columns.",
                 result_df.count(),
                 len(result_df.columns),
             )
@@ -65,7 +66,8 @@ class Analysis:
                 .agg(sum("quantity").alias("total_quantity_sold"))
             )
             logger.info(
-                "Sales insight computation completed. Resulting DataFrame has %d rows and %d columns.",
+                "Sales insight computation completed. "
+                "Resulting DataFrame has %d rows and %d columns.",
                 result_df.count(),
                 len(result_df.columns),
             )

@@ -1,13 +1,13 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import trim, col, when
+from pyspark.sql.functions import col, trim, when
 from pyspark.sql.types import (
+    BooleanType,
     DateType,
-    StringType,
-    IntegerType,
     DoubleType,
     FloatType,
+    IntegerType,
     LongType,
-    BooleanType,
+    StringType,
 )
 
 from source_code.utils.date_parse import parse_multiple_date_formats
@@ -31,7 +31,11 @@ def validate_schema(df: DataFrame, expected_schema: dict) -> list:
         field.name: field.dataType.simpleString() for field in df.schema.fields
     }
     mismatches = [
-        f"{c} (expected: {expected_schema[c]}, actual: {actual_schema.get(c, 'MISSING')})"
+        (
+            f"{c} ("
+            f"expected: {expected_schema[c]}, "
+            f"actual: {actual_schema.get(c, 'MISSING')})"
+        )
         for c in expected_schema
         if expected_schema[c] != actual_schema.get(c)
     ]

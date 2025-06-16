@@ -1,10 +1,6 @@
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import col
-
-
-from pyspark.sql.functions import udf
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import col, udf
 from pyspark.sql.types import StringType
-
 
 # Set up logging
 from source_code.utils.logger import get_logger
@@ -12,10 +8,11 @@ from source_code.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-# Categorizes price into buckets: Low (<20), Medium (20–100), High (>100), or None if price is null
+# Categorizes price into buckets: Low, Medium, High or None if price is null
 def categorize_price(price: float) -> str | None:
     """
-    Categorizes a numerical price value into "Low", "Medium", or "High" based on predefined thresholds.
+    Categorizes a numerical price value into "Low", "Medium", or "High"
+    based on predefined thresholds.
 
     Parameter:
         price: Price of each transaction
@@ -41,12 +38,14 @@ price_category_udf = udf(categorize_price, StringType())
 class DataTransformer:
     """
     A class to load and enrich sales, products, and store datasets using PySpark.
-    It performs joins to create a unified dataset and includes functionality to derive additional features using UDFs.
+    It performs joins to create a unified dataset
+    and includes functionality to derive additional features using UDFs.
     """
 
     def __init__(self, spark: SparkSession, config):
         """
-        Initializes the DataTransformer with a Spark session and configuration dictionary containing paths to cleaned data.
+        Initializes the DataTransformer with a Spark session
+        and configuration dictionary containing paths to cleaned data.
 
         Parameters:
             spark (SparkSession): Active Spark session.
@@ -60,11 +59,13 @@ class DataTransformer:
 
         logger.info("Initialized DataTransformer with configuration: %s", config)
 
-    # Loads the clean sales, products, and stores data from Parquet files using config paths
+    # Loads the clean sales, products, and stores data
     def load_data(self):
         """
-        Loads cleaned Parquet files for sales, products, and stores into Spark DataFrames using paths specified in the configuration.
-        :return:
+        Loads cleaned Parquet files for sales, products, and stores
+        into Spark DataFrames using paths specified in the configuration.
+
+
         """
         try:
             logger.info(
@@ -107,7 +108,9 @@ class DataTransformer:
 
     def enrich_data(self) -> DataFrame:
         """
-        Performs left joins between sales, products, and stores DataFrames on their respective keys to create an enriched dataset.
+        Performs left joins between sales, products, and stores
+        on their respective keys to create an enriched dataset.
+
         Returns:
             enriched_df: Dataframe.
         """
@@ -130,7 +133,8 @@ class DataTransformer:
     @staticmethod
     def enrich_data_with_udf(df):
         """
-        Adds a price_category column to the DataFrame by applying a UDF that categorizes product prices into predefined buckets.
+        Adds a price_category column to the DataFrame
+        by applying an UDF that categorizes product prices into predefined buckets.
 
         Parameter:
             df (Dataframe): Input is the enriched data set from the previous function

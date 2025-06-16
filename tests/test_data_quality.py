@@ -1,7 +1,7 @@
 import pytest
 from chispa import assert_df_equality
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType
+from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
 
 @pytest.fixture(scope="module")
