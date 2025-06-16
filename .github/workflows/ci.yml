@@ -28,19 +28,18 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pre-commit black flake8 pytest
 
       - name: Set up git authentication for pre-commit
         run: |
           git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-                 
 
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Run isort, black, flake8 via pre-commit
+        run: |
+          source venv/bin/activate
+          pre-commit run --all-files
 
-      - name: Run pre-commit on all files
-        run: pre-commit run --all-files
-
-      - name: Run code formatter (Black)
+      - name: Run formatter (Black) check
         run: |
           source venv/bin/activate
           black --check source_code tests
