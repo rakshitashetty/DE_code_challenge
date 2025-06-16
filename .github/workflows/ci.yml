@@ -26,6 +26,9 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Test git fetch auth
+        run: git fetch origin --tags
+
       - name: Install pre-commit
         run: pip install pre-commit
 
