@@ -1,5 +1,11 @@
 from pyspark.sql import SparkSession
-from source_code.utils.dq_validation import *
+from source_code.utils.dq_validation import (
+    get_columns_for_check,
+    remove_nulls,
+    remove_duplicates,
+    enforce_schema,
+    validate_schema,
+)
 from source_code.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,7 +49,7 @@ class GenericETLJob:
             )
 
             # Step 2: Clean nulls
-            logger.info("Cleaning null values using specified columns for null check.")
+            logger.info("Cleaning null values")
             columns_for_null_check = get_columns_for_check(
                 df, self.config["null_check"]["columns"]
             )

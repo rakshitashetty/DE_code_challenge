@@ -34,18 +34,18 @@ def main(config_path):
     spark = SparkSession.builder.appName("ETL").getOrCreate()
     logger.info("SparkSession initialized successfully.")
 
-    # ------------------------ Phase 1: Data Preparation ------------------------ #
+    # Phase 1: Data Preparation #
     for dataset_name in ["products", "stores", "sales"]:
         # Start ETL for each dataset
         logger.info("Starting ETL for dataset: %s", dataset_name)
         dataset_config = config[dataset_name]
 
-        # Run generic ETL job (includes null & duplicate checks and schema enforcement)
+        # Run generic ETL job (includes null & duplicate checks & schema enforcement)
         etl_job = GenericETLJob(spark, dataset_config)
         etl_job.load()
         logger.info("Completed loading and cleaning for dataset: %s", dataset_name)
 
-    # ------------------------ Phase 2: Data Transformation --------------------- #
+    # Phase 2: Data Transformation #
     # Load cleaned datasets
     transformer = DataTransformer(spark, config)
     logger.info("Starting data transformation phase.")
@@ -59,14 +59,14 @@ def main(config_path):
     enriched_df = transformer.enrich_data_with_udf(enriched_df)
     logger.info("Data enrichment completed.")
 
-    # ------------------------ Phase 3: KPI Calculation ------------------------- #
+    # Phase 3: KPI Calculation #
     logger.info("Computing KPI: Total Revenue by store")
     revenue_df = Analysis.compute_revenue_insight(enriched_df)
 
     logger.info("Computing KPI: Monthly sales insights")
     sales_df = Analysis.compute_sales_insight(enriched_df)
 
-    # ------------------------ Phase 4: Output Writing -------------------------- #
+    # Phase 4: Output Writing #
 
     # Save enriched data
     logger.info("Saving enriched data to: %s", config["output_paths"]["enriched"])
