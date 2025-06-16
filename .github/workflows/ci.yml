@@ -1,5 +1,8 @@
 name: Continuous Integration
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main ]
@@ -26,8 +29,10 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Test git fetch auth
-        run: git fetch origin --tags
+      - name: Set up git authentication for pre-commit
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+                 
 
       - name: Install pre-commit
         run: pip install pre-commit
