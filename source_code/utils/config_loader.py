@@ -18,7 +18,7 @@ def load_yaml_config(path: str) -> dict:
     try:
         logger.info("Loading configuration file from: %s", path)
 
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             config = yaml.safe_load(f)
 
         logger.info("Configuration loaded successfully.")
@@ -33,5 +33,7 @@ def load_yaml_config(path: str) -> dict:
         raise  # Reraise the exception
 
     except Exception as e:
-        logger.error("An unexpected error occurred while loading the config file: %s", str(e))
+        logger.error(
+            "An unexpected error occurred while loading the config file: %s", str(e)
+        )
         raise  # Reraise the exception

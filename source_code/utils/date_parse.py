@@ -6,7 +6,9 @@ from source_code.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def parse_multiple_date_formats(df: DataFrame, input_col: str, output_col: str) -> DataFrame:
+def parse_multiple_date_formats(
+    df: DataFrame, input_col: str, output_col: str
+) -> DataFrame:
     """
     Parses dates from multiple known string formats into a standard format.
 
@@ -26,27 +28,55 @@ def parse_multiple_date_formats(df: DataFrame, input_col: str, output_col: str) 
         DataFrame: DataFrame with an additional column containing normalized date values.
     """
 
-    logger.info("Starting date parsing for column '%s'. Total rows: %d", input_col, df.count())
+    logger.info(
+        "Starting date parsing for column '%s'. Total rows: %d", input_col, df.count()
+    )
 
-    parsed_date = when(col(input_col).rlike(r"^\d{4}-\d{2}-\d{2}$"),
-                       to_date(col(input_col), "yyyy-MM-dd")) \
-        .when(col(input_col).rlike(r"^\d{2}-\d{2}-\d{4}$") & (expr(f"int(split({input_col}, '-')[0]) > 12")),
-              to_date(col(input_col), "dd-MM-yyyy")) \
-        .when(col(input_col).rlike(r"^\d{2}-\d{2}-\d{4}$") & (expr(f"int(split({input_col}, '-')[0]) <= 12")),
-              to_date(col(input_col), "MM-dd-yyyy")) \
-        .when(col(input_col).rlike(r"^\d{2}/\d{2}/\d{4}$") & (expr(f"int(split({input_col}, '/')[0]) > 12")),
-              to_date(col(input_col), "dd/MM/yyyy")) \
-        .when(col(input_col).rlike(r"^\d{2}/\d{2}/\d{4}$") & (expr(f"int(split({input_col}, '/')[0]) <= 12")),
-              to_date(col(input_col), "MM/dd/yyyy")) \
-        .when(col(input_col).rlike(r"^\d{4}/\d{2}/\d{2}$"),
-              to_date(col(input_col), "yyyy/MM/dd")) \
-        .when(col(input_col).rlike(r"^\w+ \d{2}, \d{4}$"),
-              to_date(col(input_col), "MMMM dd, yyyy")) \
+    parsed_date = (
+        when(
+            col(input_col).rlike(r"^\d{4}-\d{2}-\d{2}$"),
+            to_date(col(input_col), "yyyy-MM-dd"),
+        )
+        .when(
+            col(input_col).rlike(r"^\d{2}-\d{2}-\d{4}$")
+            & (expr(f"int(split({input_col}, '-')[0]) > 12")),
+            to_date(col(input_col), "dd-MM-yyyy"),
+        )
+        .when(
+            col(input_col).rlike(r"^\d{2}-\d{2}-\d{4}$")
+            & (expr(f"int(split({input_col}, '-')[0]) <= 12")),
+            to_date(col(input_col), "MM-dd-yyyy"),
+        )
+        .when(
+            col(input_col).rlike(r"^\d{2}/\d{2}/\d{4}$")
+            & (expr(f"int(split({input_col}, '/')[0]) > 12")),
+            to_date(col(input_col), "dd/MM/yyyy"),
+        )
+        .when(
+            col(input_col).rlike(r"^\d{2}/\d{2}/\d{4}$")
+            & (expr(f"int(split({input_col}, '/')[0]) <= 12")),
+            to_date(col(input_col), "MM/dd/yyyy"),
+        )
+        .when(
+            col(input_col).rlike(r"^\d{4}/\d{2}/\d{2}$"),
+            to_date(col(input_col), "yyyy/MM/dd"),
+        )
+        .when(
+            col(input_col).rlike(r"^\w+ \d{2}, \d{4}$"),
+            to_date(col(input_col), "MMMM dd, yyyy"),
+        )
         .otherwise(None)
+    )
 
     # Log which formats are being used for parsing
     formats_used = [
-        "yyyy-MM-dd", "dd-MM-yyyy", "MM-dd-yyyy", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy/MM/dd", "MMMM dd, yyyy"
+        "yyyy-MM-dd",
+        "dd-MM-yyyy",
+        "MM-dd-yyyy",
+        "dd/MM/yyyy",
+        "MM/dd/yyyy",
+        "yyyy/MM/dd",
+        "MMMM dd, yyyy",
     ]
     logger.info("Attempting to parse using formats: %s", ", ".join(formats_used))
 

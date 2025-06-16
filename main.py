@@ -11,20 +11,21 @@ from source_code.data_transform.enrich_builder import DataTransformer
 from source_code.data_transform.kpi_calculator import Analysis
 
 
-
 # Set up logging
 from source_code.utils.logger import get_logger
+
 logger = get_logger(__name__)
+
 
 def main(config_path):
     """
-        Main entry point of the pipeline.
+    Main entry point of the pipeline.
 
-        Loads config, runs ingestion, transformation, and analysis.
+    Loads config, runs ingestion, transformation, and analysis.
 
-        Args:
-            config_path (str): Path to the master configuration YAML.
-        """
+    Args:
+        config_path (str): Path to the master configuration YAML.
+    """
     # Load configuration from YAML file
     config = load_yaml_config(config_path)
     logger.info("Loaded configuration from: %s", config_path)
@@ -34,7 +35,7 @@ def main(config_path):
     logger.info("SparkSession initialized successfully.")
 
     # ------------------------ Phase 1: Data Preparation ------------------------ #
-    for dataset_name in ['products', 'stores', 'sales']:
+    for dataset_name in ["products", "stores", "sales"]:
         # Start ETL for each dataset
         logger.info("Starting ETL for dataset: %s", dataset_name)
         dataset_config = config[dataset_name]
@@ -55,7 +56,7 @@ def main(config_path):
     enriched_df = transformer.enrich_data()
 
     # Apply UDF to categorize product prices
-    enriched_df=transformer.enrich_data_with_udf(enriched_df)
+    enriched_df = transformer.enrich_data_with_udf(enriched_df)
     logger.info("Data enrichment completed.")
 
     # ------------------------ Phase 3: KPI Calculation ------------------------- #
@@ -69,18 +70,23 @@ def main(config_path):
 
     # Save enriched data
     logger.info("Saving enriched data to: %s", config["output_paths"]["enriched"])
-    save_output(enriched_df, config["output_paths"]["enriched"], file_type="parquet", partition_columns=config["partition"]["enriched"])
+    save_output(
+        enriched_df,
+        config["output_paths"]["enriched"],
+        file_type="parquet",
+        partition_columns=config["partition"]["enriched"],
+    )
 
     # Create timestamped KPI output folder
-    basepath=config["output_paths"]["kpi"]
-    rundate=datetime.now().strftime("%d%m%y")
-    date_folder=os.path.join(basepath,rundate)
+    basepath = config["output_paths"]["kpi"]
+    rundate = datetime.now().strftime("%d%m%y")
+    date_folder = os.path.join(basepath, rundate)
     logger.info("Creating KPI output folder: %s", date_folder)
-    os.makedirs(date_folder,exist_ok=True)
+    os.makedirs(date_folder, exist_ok=True)
 
     # Save revenue KPI
-    revenue_file_name="total_revenue_by_store"
-    revenue_output_path=os.path.join(date_folder,revenue_file_name)
+    revenue_file_name = "total_revenue_by_store"
+    revenue_output_path = os.path.join(date_folder, revenue_file_name)
     logger.info("Saving revenue metrics to: %s", revenue_output_path)
     save_output(revenue_df, revenue_output_path, file_type="csv")
 
@@ -92,6 +98,8 @@ def main(config_path):
 
     logger.info("Pipeline execution completed successfully.")
 
+
 if __name__ == "__main__":
     import sys
+
     main(sys.argv[1])

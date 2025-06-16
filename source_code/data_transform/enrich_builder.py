@@ -6,10 +6,11 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
 
-
 # Set up logging
 from source_code.utils.logger import get_logger
+
 logger = get_logger(__name__)
+
 
 # Categorizes price into buckets: Low (<20), Medium (20–100), High (>100), or None if price is null
 def categorize_price(price: float) -> str | None:
@@ -32,6 +33,7 @@ def categorize_price(price: float) -> str | None:
     else:
         return "High"
 
+
 price_category_udf = udf(categorize_price, StringType())
 
 
@@ -41,6 +43,7 @@ class DataTransformer:
     A class to load and enrich sales, products, and store datasets using PySpark.
     It performs joins to create a unified dataset and includes functionality to derive additional features using UDFs.
     """
+
     def __init__(self, spark: SparkSession, config):
         """
         Initializes the DataTransformer with a Spark session and configuration dictionary containing paths to cleaned data.
@@ -64,20 +67,39 @@ class DataTransformer:
         :return:
         """
         try:
-            logger.info("Loading sales data from %s", self.config['clean_paths']['sales'])
-            self.sales_df = self.spark.read.parquet(self.config['clean_paths']['sales'])
-            logger.info("Successfully loaded sales data with %d rows and %d columns", self.sales_df.count(),
-                        len(self.sales_df.columns))
+            logger.info(
+                "Loading sales data from %s", self.config["clean_paths"]["sales"]
+            )
+            self.sales_df = self.spark.read.parquet(self.config["clean_paths"]["sales"])
+            logger.info(
+                "Successfully loaded sales data with %d rows and %d columns",
+                self.sales_df.count(),
+                len(self.sales_df.columns),
+            )
 
-            logger.info("Loading products data from %s", self.config['clean_paths']['products'])
-            self.products_df = self.spark.read.parquet(self.config['clean_paths']['products'])
-            logger.info("Successfully loaded products data with %d rows and %d columns", self.products_df.count(),
-                        len(self.products_df.columns))
+            logger.info(
+                "Loading products data from %s", self.config["clean_paths"]["products"]
+            )
+            self.products_df = self.spark.read.parquet(
+                self.config["clean_paths"]["products"]
+            )
+            logger.info(
+                "Successfully loaded products data with %d rows and %d columns",
+                self.products_df.count(),
+                len(self.products_df.columns),
+            )
 
-            logger.info("Loading stores data from %s", self.config['clean_paths']['stores'])
-            self.stores_df = self.spark.read.parquet(self.config['clean_paths']['stores'])
-            logger.info("Successfully loaded stores data with %d rows and %d columns", self.stores_df.count(),
-                        len(self.stores_df.columns))
+            logger.info(
+                "Loading stores data from %s", self.config["clean_paths"]["stores"]
+            )
+            self.stores_df = self.spark.read.parquet(
+                self.config["clean_paths"]["stores"]
+            )
+            logger.info(
+                "Successfully loaded stores data with %d rows and %d columns",
+                self.stores_df.count(),
+                len(self.stores_df.columns),
+            )
 
         except Exception as e:
             logger.error("Failed to load data: %s", e)
@@ -91,12 +113,15 @@ class DataTransformer:
         """
         try:
             logger.info("Enriching data by joining sales, products, and stores.")
-            enriched_df = self.sales_df \
-                .join(self.products_df, on="product_id", how="left") \
-                .join(self.stores_df, on="store_id", how="left")
+            enriched_df = self.sales_df.join(
+                self.products_df, on="product_id", how="left"
+            ).join(self.stores_df, on="store_id", how="left")
 
-            logger.info("Successfully enriched data with %d rows and %d columns", enriched_df.count(),
-                        len(enriched_df.columns))
+            logger.info(
+                "Successfully enriched data with %d rows and %d columns",
+                enriched_df.count(),
+                len(enriched_df.columns),
+            )
             return enriched_df
         except Exception as e:
             logger.error("Failed to enrich data: %s", e)
@@ -118,7 +143,9 @@ class DataTransformer:
 
         try:
             logger.info("Adding price category using UDF.")
-            enriched_df = df.withColumn("price_category", price_category_udf(col("price")))
+            enriched_df = df.withColumn(
+                "price_category", price_category_udf(col("price"))
+            )
             logger.info("Successfully added price_category column.")
             return enriched_df
         except Exception as e:

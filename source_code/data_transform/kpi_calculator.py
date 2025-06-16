@@ -4,16 +4,19 @@ from pyspark.sql.functions import col, sum, month, year, round
 
 # Set up logging
 from source_code.utils.logger import get_logger
+
 logger = get_logger(__name__)
+
 
 class Analysis:
     """
-        A utility class containing static methods to compute business KPIs from enriched datasets.
+    A utility class containing static methods to compute business KPIs from enriched datasets.
 
-        Methods:
-            compute_sales_insight(df): Calculates total monthly revenue by year and month for each store.
-            compute_revenue_insight(df): Aggregates total revenue by store. and product category
-        """
+    Methods:
+        compute_sales_insight(df): Calculates total monthly revenue by year and month for each store.
+        compute_revenue_insight(df): Aggregates total revenue by store. and product category
+    """
+
     @staticmethod
     def compute_revenue_insight(df: DataFrame) -> DataFrame:
         """
@@ -27,15 +30,21 @@ class Analysis:
         """
         try:
             logger.info("Starting revenue insight computation.")
-            result_df = df.withColumn("revenue", col("quantity") * col("price")) \
-                .groupBy("store_id", "category") \
+            result_df = (
+                df.withColumn("revenue", col("quantity") * col("price"))
+                .groupBy("store_id", "category")
                 .agg(round(sum("revenue"), 2).alias("total_revenue"))
-            logger.info("Revenue insight computation completed. Resulting DataFrame has %d rows and %d columns.",
-                        result_df.count(), len(result_df.columns))
+            )
+            logger.info(
+                "Revenue insight computation completed. Resulting DataFrame has %d rows and %d columns.",
+                result_df.count(),
+                len(result_df.columns),
+            )
             return result_df
         except Exception as e:
             logger.error("Failed to compute revenue insight: %s", str(e))
             raise  # Re-raise the exception after logging it
+
     @staticmethod
     def compute_sales_insight(df: DataFrame) -> DataFrame:
         """
@@ -49,14 +58,18 @@ class Analysis:
         """
         try:
             logger.info("Starting sales insight computation.")
-            result_df = df.withColumn("year", year("transaction_date")) \
-                .withColumn("month", month("transaction_date")) \
-                .groupBy("year", "month", "category") \
+            result_df = (
+                df.withColumn("year", year("transaction_date"))
+                .withColumn("month", month("transaction_date"))
+                .groupBy("year", "month", "category")
                 .agg(sum("quantity").alias("total_quantity_sold"))
-            logger.info("Sales insight computation completed. Resulting DataFrame has %d rows and %d columns.",
-                        result_df.count(), len(result_df.columns))
+            )
+            logger.info(
+                "Sales insight computation completed. Resulting DataFrame has %d rows and %d columns.",
+                result_df.count(),
+                len(result_df.columns),
+            )
             return result_df
         except Exception as e:
             logger.error("Failed to compute sales insight: %s", str(e))
             raise  # Re-raise the exception after logging it
-

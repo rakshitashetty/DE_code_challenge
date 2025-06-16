@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from source_code.utils.dq_validation import *
 from source_code.utils.logger import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -19,12 +20,12 @@ class GenericETLJob:
 
     def load(self):
         """
-                Executes the full data loading process:
-                - Reads raw data
-                - Applies null checks and duplicate removal
-                - Enforces schema
-                - Saves the clean output
-                """
+        Executes the full data loading process:
+        - Reads raw data
+        - Applies null checks and duplicate removal
+        - Enforces schema
+        - Saves the clean output
+        """
         input_path = self.config["input_path"]
         output_path = self.config["output_path"]
         schema_dict = self.config["schema"]
@@ -35,19 +36,39 @@ class GenericETLJob:
             logger.info("Reading raw data from input path: %s", input_path)
             df = self.spark.read.option("header", True).csv(input_path)
 
-            logger.info("Successfully loaded data with %d rows and %d columns.", df.count(), len(df.columns))
+            logger.info(
+                "Successfully loaded data with %d rows and %d columns.",
+                df.count(),
+                len(df.columns),
+            )
 
             # Step 2: Clean nulls
             logger.info("Cleaning null values using specified columns for null check.")
-            columns_for_null_check = get_columns_for_check(df, self.config['null_check']['columns'])
-            df = remove_nulls(df, columns_for_null_check, self.config['null_check']['null_path'])
-            logger.info("Successfully removed null values. Cleaned data has %d rows.", df.count())
+            columns_for_null_check = get_columns_for_check(
+                df, self.config["null_check"]["columns"]
+            )
+            df = remove_nulls(
+                df, columns_for_null_check, self.config["null_check"]["null_path"]
+            )
+            logger.info(
+                "Successfully removed null values. Cleaned data has %d rows.",
+                df.count(),
+            )
 
             # Step 3: Deduplicate
-            logger.info("Removing duplicates based on columns: %s", self.config['dup_check']['columns'])
-            columns_for_dup_check = get_columns_for_check(df, self.config['dup_check']['columns'])
-            df = remove_duplicates(df, columns_for_dup_check, self.config['dup_check']['dup_path'])
-            logger.info("Successfully removed duplicates. Cleaned data has %d rows.", df.count())
+            logger.info(
+                "Removing duplicates based on columns: %s",
+                self.config["dup_check"]["columns"],
+            )
+            columns_for_dup_check = get_columns_for_check(
+                df, self.config["dup_check"]["columns"]
+            )
+            df = remove_duplicates(
+                df, columns_for_dup_check, self.config["dup_check"]["dup_path"]
+            )
+            logger.info(
+                "Successfully removed duplicates. Cleaned data has %d rows.", df.count()
+            )
 
             # Step 4: Schema enforcement
             logger.info("Enforcing schema on the DataFrame.")

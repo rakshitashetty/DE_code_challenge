@@ -26,6 +26,12 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files
+
       - name: Run code formatter (Black)
         run: |
           source venv/bin/activate

@@ -1,6 +1,14 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import trim, col, when
-from pyspark.sql.types import DateType, StringType, IntegerType, DoubleType, FloatType, LongType, BooleanType
+from pyspark.sql.types import (
+    DateType,
+    StringType,
+    IntegerType,
+    DoubleType,
+    FloatType,
+    LongType,
+    BooleanType,
+)
 
 from source_code.utils.date_parse import parse_multiple_date_formats
 from source_code.utils.logger import get_logger
@@ -19,7 +27,9 @@ def validate_schema(df: DataFrame, expected_schema: dict) -> list:
     """
     Compare the actual DataFrame schema with an expected schema.
     """
-    actual_schema = {field.name: field.dataType.simpleString() for field in df.schema.fields}
+    actual_schema = {
+        field.name: field.dataType.simpleString() for field in df.schema.fields
+    }
     mismatches = [
         f"{c} (expected: {expected_schema[c]}, actual: {actual_schema.get(c, 'MISSING')})"
         for c in expected_schema
@@ -37,11 +47,19 @@ def remove_nulls(df: DataFrame, columns: list, output_path: str) -> DataFrame:
     Replace empty strings with nulls, log null rows, and drop them from DataFrame.
     """
     logger.info("Replacing empty strings with nulls for columns: %s", columns)
-    df_na = df.select([
-        when(trim(col(c)) == '', None).otherwise(trim(col(c))).alias(c) if c in columns else col(c)
-        for c in df.columns
-    ])
-    null_rows = df_na.filter(" OR ".join([f"{col_name} IS NULL" for col_name in columns]))
+    df_na = df.select(
+        [
+            (
+                when(trim(col(c)) == "", None).otherwise(trim(col(c))).alias(c)
+                if c in columns
+                else col(c)
+            )
+            for c in df.columns
+        ]
+    )
+    null_rows = df_na.filter(
+        " OR ".join([f"{col_name} IS NULL" for col_name in columns])
+    )
 
     if not null_rows.isEmpty():
         logger.info("Null rows detected. Writing to: %s", output_path)
@@ -60,7 +78,7 @@ def remove_duplicates(df: DataFrame, columns: list, output_path: str) -> DataFra
     """
     logger.info("Checking for duplicates based on columns: %s", columns)
     windowed = df.groupBy(columns).count().filter("count > 1")
-    duplicate_rows = df.join(windowed, on=columns, how='inner')
+    duplicate_rows = df.join(windowed, on=columns, how="inner")
 
     if duplicate_rows.count() > 0:
         logger.warning("Duplicate rows found. Writing to: %s", output_path)
@@ -103,7 +121,10 @@ def enforce_schema(df: DataFrame, schema: dict) -> DataFrame:
 
     for col_name, data_type in schema.items():
         if col_name not in df.columns:
-            logger.warning("Column '%s' not found in DataFrame. Skipping schema enforcement.", col_name)
+            logger.warning(
+                "Column '%s' not found in DataFrame. Skipping schema enforcement.",
+                col_name,
+            )
             continue
 
         data_type = get_data_type(data_type)
@@ -115,10 +136,19 @@ def enforce_schema(df: DataFrame, schema: dict) -> DataFrame:
             df = df.fillna({col_name: "1900-01-01"})
         else:
             if actual_type != data_type.simpleString():
-                logger.info("Casting column '%s' from %s to %s", col_name, actual_type, data_type.simpleString())
+                logger.info(
+                    "Casting column '%s' from %s to %s",
+                    col_name,
+                    actual_type,
+                    data_type.simpleString(),
+                )
                 df = df.withColumn(col_name, col(col_name).cast(data_type))
             else:
-                logger.info("Column '%s' is already of type %s. Skipping cast.", col_name, data_type.simpleString())
+                logger.info(
+                    "Column '%s' is already of type %s. Skipping cast.",
+                    col_name,
+                    data_type.simpleString(),
+                )
 
     logger.info("Schema enforcement completed.")
     return df
