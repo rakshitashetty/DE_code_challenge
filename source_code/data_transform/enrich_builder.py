@@ -1,5 +1,21 @@
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import year, month, sum, col
+from pyspark.sql.functions import col
+
+
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StringType
+
+def categorize_price(price: float) -> str | None:
+    if price is None:
+        return None
+    elif price < 20:
+        return "Low"
+    elif 20 <= price <= 100:
+        return "Medium"
+    else:
+        return "High"
+
+price_category_udf = udf(categorize_price, StringType())
 
 
 class DataTransformer:
@@ -19,4 +35,11 @@ class DataTransformer:
         enriched_df = self.sales_df \
             .join(self.products_df, on="product_id", how="left") \
             .join(self.stores_df, on="store_id", how="left")
+        return enriched_df
+
+
+    @staticmethod
+    def enrich_data_with_udf(df):
+        # Add price_category column by applying the UDF on the price column
+        enriched_df = df.withColumn("price_category", price_category_udf(col("price")))
         return enriched_df

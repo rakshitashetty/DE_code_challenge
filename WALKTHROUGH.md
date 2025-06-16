@@ -3,8 +3,11 @@
 ## Overview
 
 This project implements a **retail sales analytics pipeline** using **Python and PySpark**. The goal is to ingest raw sales, product, and store data, perform data quality checks, transform and enrich the data, and generate actionable KPIs in an automated, maintainable, and testable way.
-
 ---
+
+> **Note:**  
+> The `data/` and `output/` directories are included in this repository *solely for evaluation purposes*.  
+> In a production environment, raw and processed data would typically reside in external storage systems such as cloud storage containers (e.g., AWS S3, Azure Blob Storage, or Google Cloud Storage) and **not** be version-controlled in Git.
 
 ## Project Design
 
@@ -41,7 +44,7 @@ The solution follows a layered architecture inspired by modern data engineering 
 ### Core Components
 
 - **Config Loader**: Parses the YAML config file to provide paths, schema, and parameters.
-- **Data Loader**: Implements data loading for all source files simulaneously implementing the DQ checks.
+- **Data Loader**: Implements data loading for all source files simultaneously implementing the DQ checks.
 - **Enrich Builder**: Joins clean datasets to create an enriched enterprise layer.
 - **KPI Calculator**: Calculates KPIs such as monthly sales insights and total revenue by store.
 - **Logging**: Uses Python `logging` module for info/debug messages (no `print()` in production).
@@ -75,7 +78,7 @@ pip install -r requirements.txt
 Use the entry point script to run the full pipeline:
 
 ```bash
-python main.py --config_path config/master_config.yml
+python -m main config/master_config.yml
 ```
 
 This will:
@@ -140,6 +143,46 @@ Tests verify:
 
 ---
 
+### Assumptions
+
+- **Input Data Quality**:
+  - All datasets (`sales`, `products`, and `stores`) are generally clean and schema-compliant.
+  - `price` is of type `DoubleType` and assumed to be **non-null and non-negative**.
+  - `quantity` is assumed to be an integer and **non-null**.
+  - `product_id` and `store_id` are present and valid foreign keys for joining.
+
+- **Date Parsing**:
+  - The `transaction_date` field may contain **multiple formats**, such as:
+    - `dd/MM/yyyy`, `MM/dd/yyyy`, `yyyy-MM-dd`, `MMMM dd, yyyy`, etc.
+  - Dates are parsed via a **custom parser** that matches formats using regex + `to_date`.
+  - If a date cannot be parsed, it is set to `1900-01-01`.
+  - All rows with `null` transaction dates are either excluded from aggregations or logged for inspection.
+
+- **Enriched Dataset**:
+  - Combines `sales`, `products`, and `stores` into a single unified view.
+  - Always includes the following columns:
+    - `transaction_id`, `store_name`, `location`, `product_name`, `category`, `quantity`, `transaction_date`, `price`, `price_category`.
+  - `price_category` is derived using a PySpark UDF based on price thresholds:
+    - `Low`: `< 20`, `Medium`: `20–100`, `High`: `> 100`.
+  - Product prices vary across transactions (due to discounts, promotions, or dynamic pricing).
+  - Therefore, price categorization (`Low`, `Medium`, `High`) is applied at the **transaction level** based on the price recorded in each transaction row, not as a fixed attribute of the product.
+
+- **Revenue Calculations**:
+  - Revenue = `quantity * price`.
+  - Aggregated revenue is **rounded to 2 decimal places** using `round()`.
+
+- **Data Export**:
+  - Enriched dataset is saved in **Parquet format**, partitioned by `category` and `transaction_date`.
+  - Aggregated revenue by store/category is saved as **CSV**.
+  - All output paths are assumed to be **writable**, and existing files may be **overwritten**.
+
+- **Config and Code Structure**:
+  - Supported date formats can be configured in a `.yaml` file for flexibility.
+  - Parsing, saving, and transformation logic is modularized across `source_code/` and `utils/`.
+
+
+---
+
 ## Future Improvements
 
 - Add parameterization for date ranges in KPIs.
@@ -152,7 +195,7 @@ Tests verify:
 ### Known Issues / Limitations
 
 - Supports only `.csv` input files.
-- Assumes all input files fit in memory (no chunked processing yet).
+- Assume all input files fit in memory (no chunked processing yet).
 - Schema definitions must be manually maintained in the config YAML.
 - No automated backfilling of historical KPI metrics.
 

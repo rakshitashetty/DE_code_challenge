@@ -15,7 +15,7 @@ class Analysis:
         """
         return df.withColumn("revenue", col("quantity") * col("price")) \
             .groupBy("store_id", "category") \
-            .agg(sum("revenue").alias("total_revenue"))
+            .agg(round(sum("revenue"), 2).alias("total_revenue"))
 
     @staticmethod
     def compute_sales_insight(df: DataFrame) -> DataFrame:

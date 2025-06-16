@@ -55,3 +55,5 @@ output_paths:
   enriched: ./output/enriched
   kpi: ./output/metrics/
 
+partition:
+  enriched: ["category","transaction_date"]

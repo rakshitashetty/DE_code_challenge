@@ -29,10 +29,11 @@ def main(config_path):
     transformer.load_data()
 
     enriched_df = transformer.enrich_data()
+    enriched_df=transformer.enrich_data_with_udf(enriched_df)
     revenue_df = Analysis.compute_revenue_insight(enriched_df)
     sales_df = Analysis.compute_sales_insight(enriched_df)
 
-    save_output(enriched_df, config["output_paths"]["enriched"], file_type="parquet")
+    save_output(enriched_df, config["output_paths"]["enriched"], file_type="parquet", partition_columns=config["partition"]["enriched"])
 
     basepath=config["output_paths"]["kpi"]
     rundate=datetime.now().strftime("%d%m%y")
