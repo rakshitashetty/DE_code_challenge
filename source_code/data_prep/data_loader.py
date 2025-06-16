@@ -1,5 +1,7 @@
 from pyspark.sql import SparkSession
 from source_code.utils.dq_validation import *
+from source_code.utils.logger import get_logger
+logger = get_logger(__name__)
 
 
 class GenericETLJob:
@@ -13,44 +15,60 @@ class GenericETLJob:
         """
         self.spark = spark
         self.config = config
+        logger.info("Initialized GenericETLJob with configuration: %s", config)
 
     def load(self):
-        print(self.config)
+        """
+                Executes the full data loading process:
+                - Reads raw data
+                - Applies null checks and duplicate removal
+                - Enforces schema
+                - Saves the clean output
+                """
         input_path = self.config["input_path"]
         output_path = self.config["output_path"]
         schema_dict = self.config["schema"]
 
+        logger.info("Starting the ETL job: loading data from %s", input_path)
+        try:
+            # Step 1: Read raw data
+            logger.info("Reading raw data from input path: %s", input_path)
+            df = self.spark.read.option("header", True).csv(input_path)
 
-        # Read data
-        df = self.spark.read.option("header", True).csv(input_path)
+            logger.info("Successfully loaded data with %d rows and %d columns.", df.count(), len(df.columns))
 
+            # Step 2: Clean nulls
+            logger.info("Cleaning null values using specified columns for null check.")
+            columns_for_null_check = get_columns_for_check(df, self.config['null_check']['columns'])
+            df = remove_nulls(df, columns_for_null_check, self.config['null_check']['null_path'])
+            logger.info("Successfully removed null values. Cleaned data has %d rows.", df.count())
 
-        # Clean nulls
-        columns_for_null_check = get_columns_for_check(df, self.config['null_check']['columns'])
-        df = remove_nulls(df, columns_for_null_check, self.config['null_check']['null_path'])
+            # Step 3: Deduplicate
+            logger.info("Removing duplicates based on columns: %s", self.config['dup_check']['columns'])
+            columns_for_dup_check = get_columns_for_check(df, self.config['dup_check']['columns'])
+            df = remove_duplicates(df, columns_for_dup_check, self.config['dup_check']['dup_path'])
+            logger.info("Successfully removed duplicates. Cleaned data has %d rows.", df.count())
 
+            # Step 4: Schema enforcement
+            logger.info("Enforcing schema on the DataFrame.")
+            df = enforce_schema(df, schema_dict)
+            logger.info("Schema enforcement completed.")
 
+            # Step 5: Schema validation
+            logger.info("Validating schema...")
+            mismatches = validate_schema(df, schema_dict)
+            if mismatches:
+                logger.error("Schema mismatches found: %s", mismatches)
+                logger.debug("Expected schema: %s", schema_dict)
+            else:
+                logger.info("No schema mismatches found.")
+                logger.debug("Expected schema: %s", schema_dict)
 
+            # Step 6: Save cleaned data
+            logger.info("Saving the cleaned data to output path: %s", output_path)
+            df.write.mode("overwrite").parquet(output_path)
+            logger.info("Successfully saved cleaned data to: %s", output_path)
 
-        # Deduplicate
-        columns_for_dup_check = get_columns_for_check(df, self.config['dup_check']['columns'])
-        df = remove_duplicates(df, columns_for_dup_check, self.config['dup_check']['dup_path'])
-
-        # Schema enforcement
-        df = enforce_schema(df, schema_dict)
-
-
-        #Scehma validation
-        mismatches = validate_schema(df, schema_dict)
-        if mismatches:
-            print("Mismatch")
-            print(mismatches)
-            print(schema_dict)
-        else:
-            print(mismatches)
-            print(schema_dict)
-            print("No Mismatch")
-
-
-        # Save cleaned data
-        df.write.mode("overwrite").parquet(output_path)
+        except Exception as e:
+            logger.error("ETL job failed due to error: %s", str(e))
+            raise  # Reraise the exception after logging it
